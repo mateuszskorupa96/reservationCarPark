@@ -44,20 +44,67 @@ public class ReservationServiceImpl implements IReservationService {
     @Qualifier(value = "carParkDaoDB")
     private ICarParkDao serviceDao;
 
-    public void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException, ParkingInvalidArgumentException {
-        LevelDTO levelDTO = findLevel(parkingId, levelId);
-        RowDTO rowDTO
 
+    /*
+     * (non-Javadoc)
+     * @see pl.hycom.training.reservation.IReservationService#book(int, int, int, int)
+     */
+
+    public void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException{
+        LOG.debug("book called");
+        Parking parking = serviceDao.findParkingById(parkingId);
+        Level level = parking.getParkingLevels().get(levelId-1);
+        Row row = level.getRows().get(rowId-1);
+        List<ParkingSpace> parkingSpace = row.getParkingSpaces();
+        if (level.getParking() != null || level.getParking().getId() != parkingId) {
+            for (ParkingSpace ps : parkingSpace) {
+                if (ps.getId() == placeId) {
+                    if (!ps.isTaken()) {
+                        ps.setTaken(true);
+                        LOG.debug("book accomplished");
+                        return;
+                    } else {
+                        LOG.error("Place with ID=" + placeId + " has been already booked.");
+                        throw new PlaceNotAvailableException("parking.operation.place.book.error");
+                    }
+
+                }
+            }
+        } else {
+            LOG.error("Level with given ID does not exist");
+        }
+        throw new PlaceInvalidException("parking.operation.place.book.error");
     }
+
+    /*
+     * (non-Javadoc)
+     * @see pl.hycom.training.reservation.IReservationService#release(int, int, int, int)
+     */
 
     @Override
     public void release(int parkingId, int levelId, int rowId, int placeId) throws PlaceInvalidException {
-
+        LOG.debug("realease called");
+        Parking parking = serviceDao.findParkingById(parkingId);
+        Level level = parking.getParkingLevels().get(levelId-1);
+        Row row = level.getRows().get(rowId-1);
+        List<ParkingSpace> parkingSpace = row.getParkingSpaces();
+        if (level.getParking() != null || level.getParking().getId() != parkingId) {
+            for (ParkingSpace ps : parkingSpace) {
+                if (ps.getId() == placeId) {
+                    ps.setTaken(false);
+                    LOG.debug("release accomplished");
+                    return;
+                }
+            }
+        } else {
+            LOG.error("Level with given id does not exist");
+        }
+        throw new PlaceInvalidException("parking.operation.place.release.error");
     }
 
     /**
      * Method responsible for preparing list of all found in database parkings. If no parking found, empty list is returned.
-     * 
+     *
      * @return list of {@link ParkingDTO} object
      */
     public List<ParkingDTO> getAllParkings() {

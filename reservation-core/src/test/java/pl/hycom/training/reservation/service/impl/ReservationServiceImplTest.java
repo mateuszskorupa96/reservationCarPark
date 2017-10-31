@@ -16,11 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.hycom.training.reservation.api.service.IReservationService;
 import pl.hycom.training.reservation.config.TestConfig;
 import pl.hycom.training.reservation.dao.api.ICarParkDao;
+import pl.hycom.training.reservation.dao.model.Level;
+import pl.hycom.training.reservation.dao.model.ParkingSpace;
 import pl.hycom.training.reservation.exception.ParkingInvalidArgumentException;
 import pl.hycom.training.reservation.exception.PlaceInvalidException;
 import pl.hycom.training.reservation.exception.PlaceNotAvailableException;
 import pl.hycom.training.reservation.model.LevelDTO;
 import pl.hycom.training.reservation.model.ParkingDTO;
+import pl.hycom.training.reservation.model.ParkingSpaceDTO;
+import pl.hycom.training.reservation.model.RowDTO;
 
 /**
  * JUnits for {@link ReservationServiceImpl} class implementation
@@ -94,29 +98,73 @@ public class ReservationServiceImplTest {
     public void testFindLevel_Exception() throws ParkingInvalidArgumentException {
         reservationService.findLevel(2, 1);
     }
-    
+
+    /**
+     * Method implements test for {@link ReservationServiceImpl#book(int, int, int, int)} is OK
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
+
     @Test
-    public void testBook_OK() throws PlaceInvalidException, PlaceNotAvailableException {
-        throw new NotImplementedException("Not implemented yet");
+    public void testBook_OK() throws PlaceNotAvailableException, PlaceInvalidException {
+        ParkingSpace ps = carParkDao.findParkingSpaceById(7);
+        Assert.assertNotNull(ps);
+        reservationService.book(1, 1, 2, 7);
+
+
+        Assert.assertEquals(true, ps.isTaken());
     }
-    
-    @Test(expected = PlaceInvalidException.class)
-    public void testBook_PlaceInvalidException() throws PlaceInvalidException, PlaceNotAvailableException {
-        throw new NotImplementedException("Not implemented yet");
-    }
-    
-    @Test(expected = PlaceNotAvailableException.class)
-    public void testBook_PlaceNotAvailableException() throws PlaceNotAvailableException, PlaceInvalidException {
-        throw new NotImplementedException("Not implemented yet");
-    }
-    
-    @Test
-    public void testRelease_OK() throws PlaceInvalidException {
-        throw new NotImplementedException("Not implemented yet");
-    }
+    /**
+     * Methods tests implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl#book(int, int, int, int)}
+     * invalid place, should throw PlaceInvalidException
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
 
     @Test(expected = PlaceInvalidException.class)
+    public void testBook_PlaceInvalidException() throws PlaceNotAvailableException, PlaceInvalidException {
+
+
+
+        reservationService.book(1, 1, 2, 1);
+
+    }
+
+    /**
+     * Methods tests implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl#book(int, int, int, int)}
+     * set is taken, should throw PlaceNotAvailableException
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
+
+    @Test(expected = PlaceNotAvailableException.class)
+    public void testBook_PlaceNotAvailableException() throws PlaceNotAvailableException, PlaceInvalidException {
+        ParkingSpace ps = carParkDao.findParkingSpaceById(1);
+        reservationService.book(1,1,1,1);
+    }
+
+
+    /**
+     * Method implemets test of {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl#release(int, int, int, int)}
+     * - is OK
+     * @throws PlaceInvalidException
+     */
+
+    @Test
+    public void testRelease_OK() throws PlaceInvalidException {
+        ParkingSpace ps = carParkDao.findParkingSpaceById(2);
+        Assert.assertNotNull(ps);
+        reservationService.release(1,1,1,2);
+    }
+
+    /**
+     * Method test implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl#release(int, int, int, int)}
+     * - throws PlaceInvalidException
+     * @throws PlaceInvalidException
+     */
+    @Test(expected = PlaceInvalidException.class)
     public void testRelease_PlaceInvalidException() throws PlaceInvalidException {
-        throw new NotImplementedException("Not implemented yet");
+
+        reservationService.release(1,2,1,1);
     }
 }

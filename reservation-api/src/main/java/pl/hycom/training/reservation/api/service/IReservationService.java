@@ -26,7 +26,7 @@ public interface IReservationService {
      * @throws PlaceNotAvailableException if chosen place is already booked
      * @throws PlaceInvalidException if chosen place does not exist
      */
-    void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException, ParkingInvalidArgumentException;
+    void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException;
 
     /**
      * Method responsible for release parking place with given place, row, level identifier.

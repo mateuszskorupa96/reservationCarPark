@@ -44,12 +44,15 @@ public class ReservationServiceImpl implements IReservationService {
     @Qualifier(value = "carParkDaoDB")
     private ICarParkDao serviceDao;
 
-    public void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException {
-        throw new NotImplementedException("Not implemented yet");
+    public void book(int parkingId, int levelId, int rowId, int placeId) throws PlaceNotAvailableException, PlaceInvalidException, ParkingInvalidArgumentException {
+        LevelDTO levelDTO = findLevel(parkingId, levelId);
+        RowDTO rowDTO
+
     }
 
+    @Override
     public void release(int parkingId, int levelId, int rowId, int placeId) throws PlaceInvalidException {
-        throw new NotImplementedException("Not implemented yet");
+
     }
 
     /**

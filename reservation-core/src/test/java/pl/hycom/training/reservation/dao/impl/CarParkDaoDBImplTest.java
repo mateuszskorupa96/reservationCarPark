@@ -13,11 +13,19 @@ import org.springframework.test.context.junit4.AbstractTransactionalJUnit4Spring
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import pl.hycom.training.reservation.api.service.IReservationService;
 import pl.hycom.training.reservation.config.TestConfig;
 import pl.hycom.training.reservation.dao.api.ICarParkDao;
 import pl.hycom.training.reservation.dao.model.Level;
 import pl.hycom.training.reservation.dao.model.Parking;
 import pl.hycom.training.reservation.dao.model.ParkingSpace;
+import pl.hycom.training.reservation.dao.model.Row;
+import pl.hycom.training.reservation.exception.PlaceInvalidException;
+import pl.hycom.training.reservation.exception.PlaceNotAvailableException;
+import pl.hycom.training.reservation.model.LevelDTO;
+import pl.hycom.training.reservation.model.ParkingDTO;
+import pl.hycom.training.reservation.model.ParkingSpaceDTO;
+import pl.hycom.training.reservation.model.RowDTO;
 
 /**
  * JUnits for {@link CarParkDaoDBImpl} class
@@ -36,6 +44,10 @@ public class CarParkDaoDBImplTest extends AbstractTransactionalJUnit4SpringConte
     @Autowired
     @Qualifier(value = "carParkDaoDB")
     private ICarParkDao carParkDao;
+
+    @Autowired
+    @Qualifier(value = "carParkServiceDao")
+    private IReservationService reservationService;
     
     /**
      * Method responsible for preparing initial data for each JUnit
@@ -157,4 +169,88 @@ public class CarParkDaoDBImplTest extends AbstractTransactionalJUnit4SpringConte
         Assert.assertNotNull(list);
         Assert.assertEquals(3, list.size());
     }
+
+    /**
+     * Methods tests implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl} everything OK
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
+
+    @Test
+    public void testBook_OK() throws PlaceNotAvailableException, PlaceInvalidException {
+        Parking parking = carParkDao.findParkingById(1);
+        Level level = parking.getParkingLevels().get(0);
+        Row row = level.getRows().get(0);
+        ParkingSpace parkingSpace = row.getParkingSpaces().get(0);
+        parkingSpace.setTaken(false);
+        reservationService.book(parking.getId().intValue(), level.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+        Assert.assertEquals(true, parkingSpace.isTaken());
+    }
+    /**
+     * Methods tests implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl}
+     * invalid place, should throw PlaceInvalidException
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
+
+    @Test
+    public void testBook_PlaceInvalidException() throws PlaceNotAvailableException, PlaceInvalidException {
+        ParkingDTO parking = reservationService.findParking(1);
+        LevelDTO level = parking.getLevels().get(0);
+        RowDTO row = level.getRows().get(0);
+        ParkingSpaceDTO parkingSpace = row.getParkingSpaces().get(0);
+        parkingSpace.setTaken(false);
+        reservationService.book(20, level.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+        level.setParking(null);
+        reservationService.book(parking.getId().intValue(), level.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+
+    }
+
+    /**
+     * Methods tests implementation of method {@link pl.hycom.training.reservation.service.impl.ReservationServiceImpl}
+     * set is taken, should throw PlaceNotAvailableException
+     * @throws PlaceNotAvailableException
+     * @throws PlaceInvalidException
+     */
+
+    @Test
+    public void testBook_PlaceNotAvailableException() throws PlaceNotAvailableException, PlaceInvalidException {
+        ParkingDTO parking = reservationService.findParking(1);
+        LevelDTO level = parking.getLevels().get(0);
+        RowDTO row = level.getRows().get(0);
+        ParkingSpaceDTO parkingSpace = row.getParkingSpaces().get(0);
+        parkingSpace.setTaken(true);
+        reservationService.book(parking.getId().intValue(), level.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+    }
+
+
+
+    @Test
+    public void testRelease_OK() throws PlaceInvalidException {
+        ParkingDTO parking = reservationService.findParking(1);
+        LevelDTO level = parking.getLevels().get(0);
+        RowDTO row = level.getRows().get(0);
+        ParkingSpaceDTO parkingSpace = row.getParkingSpaces().get(0);
+        parkingSpace.setTaken(true);
+        reservationService.release(parking.getId().intValue(), level.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+        Assert.assertEquals(false, parkingSpace.isTaken());
+    }
+
+    @Test
+    public void testRelease_PlaceInvalidException() throws PlaceInvalidException {
+        ParkingDTO parking = reservationService.findParking(1);
+        LevelDTO level = parking.getLevels().get(0);
+        RowDTO row = level.getRows().get(0);
+        ParkingSpaceDTO parkingSpace = row.getParkingSpaces().get(0);
+        parkingSpace.setTaken(true);
+        Level nullLevel = carParkDao.findLevelById(1);
+        nullLevel.setId(null);
+        reservationService.release(parking.getId().intValue(), nullLevel.getId().intValue(), row.getId().intValue(), parkingSpace.getId().intValue());
+    }
 }
+
+//    testBook_OK
+//            testBook_PlaceInvalidException
+//    testBook_PlaceNotAvailableException
+//            testRelease_OK
+//testRelease_PlaceInvalidException

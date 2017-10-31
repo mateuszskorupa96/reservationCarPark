@@ -58,4 +58,7 @@ public class ParkingSpaceDTO {
         return placeNumber;
     }
 
+    public void setTaken(boolean taken) {
+        this.taken = taken;
+    }
 }
